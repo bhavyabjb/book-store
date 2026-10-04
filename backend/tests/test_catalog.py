@@ -43,6 +43,26 @@ async def test_list_books_filters_by_price_and_format(client, db_session):
     assert body["items"][0]["title"] == "Pricey Hardcover"
 
 
+async def test_list_books_filters_by_delivery_date(client, db_session):
+    import datetime as dt
+
+    category = await make_category(db_session)
+    author = await make_author(db_session)
+    await make_book(
+        db_session, category, author, title="Fast Delivery", slug="fast-delivery", delivery_days=2
+    )
+    await make_book(
+        db_session, category, author, title="Slow Delivery", slug="slow-delivery", delivery_days=10
+    )
+
+    cutoff = (dt.date.today() + dt.timedelta(days=3)).isoformat()
+    resp = await client.get("/books", params={"maxDeliveryDate": cutoff})
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["total"] == 1
+    assert body["items"][0]["title"] == "Fast Delivery"
+
+
 async def test_list_books_search_query(client, db_session):
     category = await make_category(db_session)
     author = await make_author(db_session, "Stephen King")

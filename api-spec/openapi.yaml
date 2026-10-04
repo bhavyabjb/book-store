@@ -127,6 +127,10 @@ paths:
         - name: maxPrice
           in: query
           schema: { type: number, format: float }
+        - name: maxDeliveryDate
+          in: query
+          description: Only return books that can be delivered on or before this date
+          schema: { type: string, format: date }
         - name: sort
           in: query
           schema:

@@ -1,3 +1,4 @@
+import datetime as dt
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
@@ -43,6 +44,7 @@ async def list_books(
     format: Optional[BookFormatSchema] = None,
     minPrice: Optional[float] = None,
     maxPrice: Optional[float] = None,
+    maxDeliveryDate: Optional[dt.date] = None,
     sort: str = Query(default="relevance", pattern="^(relevance|price_asc|price_desc|rating|newest)$"),
     section: Optional[str] = Query(default=None, pattern="^(recommended|bestsellers|new_launches)$"),
     page: int = Query(default=1, ge=1),
@@ -75,6 +77,12 @@ async def list_books(
     if maxPrice is not None:
         stmt = stmt.where(Book.price <= maxPrice)
         count_stmt = count_stmt.where(Book.price <= maxPrice)
+    if maxDeliveryDate is not None:
+        # delivery_date is computed as today + delivery_days (not stored), so
+        # translate the requested cutoff date into a max delivery_days value.
+        max_days = (maxDeliveryDate - dt.date.today()).days
+        stmt = stmt.where(Book.delivery_days <= max_days)
+        count_stmt = count_stmt.where(Book.delivery_days <= max_days)
     if section:
         field = _SECTION_FIELD[section]
         stmt = stmt.where(field.is_(True))

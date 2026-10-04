@@ -6,6 +6,7 @@ export interface Filters {
   language: string
   format: string
   priceRange: string
+  deliveryBy: string
   sort: NonNullable<ListBooksParams['sort']>
 }
 
@@ -15,6 +16,24 @@ export const PRICE_RANGES: Record<string, { minPrice?: number; maxPrice?: number
   '₹200 - ₹400': { minPrice: 200, maxPrice: 400 },
   '₹400 - ₹600': { minPrice: 400, maxPrice: 600 },
   'Above ₹600': { minPrice: 600 },
+}
+
+// Days-from-today for each "Delivery by" option; resolved to an actual date
+// at filter time (not module load) so a long-lived tab doesn't go stale.
+const DELIVERY_OPTIONS: Record<string, number | undefined> = {
+  'Any time': undefined,
+  Tomorrow: 1,
+  'Within 3 days': 3,
+  'Within 5 days': 5,
+  'Within a week': 7,
+}
+
+export function resolveDeliveryBy(option: string): { maxDeliveryDate?: string } {
+  const days = DELIVERY_OPTIONS[option]
+  if (days === undefined) return {}
+  const date = new Date()
+  date.setDate(date.getDate() + days)
+  return { maxDeliveryDate: date.toISOString().slice(0, 10) }
 }
 
 const LANGUAGES = ['All', 'English', 'Hindi', 'Spanish', 'French']
@@ -82,6 +101,19 @@ export function FiltersBar({ filters, onChange }: FiltersBarProps) {
         {Object.keys(PRICE_RANGES).map((range) => (
           <option key={range} value={range}>
             {range === 'All' ? 'Price Range: All' : range}
+          </option>
+        ))}
+      </select>
+
+      <select
+        aria-label="Delivery by"
+        value={filters.deliveryBy}
+        onChange={(e) => onChange({ ...filters, deliveryBy: e.target.value })}
+        className="rounded-lg border border-border bg-surface px-4 py-2.5 text-sm text-text focus:border-primary focus:outline-none"
+      >
+        {Object.keys(DELIVERY_OPTIONS).map((option) => (
+          <option key={option} value={option}>
+            {option === 'Any time' ? 'Delivery: Any time' : `Delivery by: ${option}`}
           </option>
         ))}
       </select>

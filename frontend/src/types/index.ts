@@ -41,6 +41,7 @@ export interface ListBooksParams {
   format?: BookFormat
   minPrice?: number
   maxPrice?: number
+  maxDeliveryDate?: string
   sort?: 'relevance' | 'price_asc' | 'price_desc' | 'rating' | 'newest'
   section?: 'recommended' | 'bestsellers' | 'new_launches'
   page?: number
